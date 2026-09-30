@@ -1,0 +1,56 @@
+<templateSet group="AZSL">
+  <template name="srg" value="ShaderResourceGroup $NAME$ : $SEMANTIC$&#10;{&#10;    $END$&#10;};&#10;" description="Shader Resource Group" toReformat="true" toShortenFQNames="true">
+    <variable name="NAME" expression="" defaultValue="MySrg" alwaysStopAt="true" />
+    <variable name="SEMANTIC" expression="" defaultValue="SRG_PerMaterial" alwaysStopAt="true" />
+    <context>
+      <option name="AZSL" value="true" />
+    </context>
+  </template>
+  <template name="srgsem" value="ShaderResourceGroupSemantic $NAME$&#10;{&#10;    FrequencyId = $FREQ$;&#10;    $END$&#10;};&#10;" description="Shader Resource Group semantic" toReformat="true" toShortenFQNames="true">
+    <variable name="NAME" expression="" defaultValue="SRG_MySemantic" alwaysStopAt="true" />
+    <variable name="FREQ" expression="" defaultValue="0" alwaysStopAt="true" />
+    <context>
+      <option name="AZSL" value="true" />
+    </context>
+  </template>
+  <template name="option" value="option bool $NAME$ = $DEFAULT$;" description="Shader option" toReformat="false" toShortenFQNames="true">
+    <variable name="NAME" expression="" defaultValue="o_enableFeature" alwaysStopAt="true" />
+    <variable name="DEFAULT" expression="" defaultValue="true" alwaysStopAt="true" />
+    <context>
+      <option name="AZSL" value="true" />
+    </context>
+  </template>
+  <template name="sampler" value="Sampler $NAME$&#10;{&#10;    AddressU = $ADDR$;&#10;    AddressV = $ADDR$;&#10;    MinFilter = Linear;&#10;    MagFilter = Linear;&#10;    MipFilter = Linear;&#10;};&#10;" description="Sampler state" toReformat="true" toShortenFQNames="true">
+    <variable name="NAME" expression="" defaultValue="m_sampler" alwaysStopAt="true" />
+    <variable name="ADDR" expression="" defaultValue="Wrap" alwaysStopAt="true" />
+    <context>
+      <option name="AZSL" value="true" />
+    </context>
+  </template>
+  <template name="struct" value="struct $NAME$&#10;{&#10;    $END$&#10;};" description="Struct declaration" toReformat="true" toShortenFQNames="true">
+    <variable name="NAME" expression="" defaultValue="MyStruct" alwaysStopAt="true" />
+    <context>
+      <option name="AZSL" value="true" />
+    </context>
+  </template>
+  <template name="vs" value="$OUT$ MainVS($IN$ input)&#10;{&#10;    $OUT$ output;&#10;    $END$&#10;    return output;&#10;}" description="Vertex shader entry point" toReformat="true" toShortenFQNames="true">
+    <variable name="OUT" expression="" defaultValue="VertexShaderOutput" alwaysStopAt="true" />
+    <variable name="IN" expression="" defaultValue="VertexShaderInput" alwaysStopAt="true" />
+    <context>
+      <option name="AZSL" value="true" />
+    </context>
+  </template>
+  <template name="ps" value="float4 MainPS($IN$ input) : SV_Target0&#10;{&#10;    $END$&#10;    return float4(0, 0, 0, 1);&#10;}" description="Pixel shader entry point" toReformat="true" toShortenFQNames="true">
+    <variable name="IN" expression="" defaultValue="FragmentInput" alwaysStopAt="true" />
+    <context>
+      <option name="AZSL" value="true" />
+    </context>
+  </template>
+  <template name="cs" value="[numthreads($X$, $Y$, 1)]&#10;void MainCS(uint3 dispatchThreadId : SV_DispatchThreadID)&#10;{&#10;    $END$&#10;}" description="Compute shader entry point" toReformat="true" toShortenFQNames="true">
+    <variable name="X" expression="" defaultValue="8" alwaysStopAt="true" />
+    <variable name="Y" expression="" defaultValue="8" alwaysStopAt="true" />
+    <context>
+      <option name="AZSL" value="true" />
+    </context>
+  </template>
+</templateSet>

@@ -3,8 +3,8 @@ plugins {
     id 'org.jetbrains.intellij' version '1.17.4'
 }
 
-group = 'com.hlsl'
-version = '1.11.2'
+group = 'com.azsl'
+version = '1.17.0'
 
 repositories {
     mavenCentral()
@@ -13,6 +13,9 @@ repositories {
 java {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
 }
 
 intellij {

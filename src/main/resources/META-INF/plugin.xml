@@ -1,94 +1,163 @@
 <idea-plugin>
-    <id>com.hlsl.plugin</id>
-    <name>HLSL Language Support</name>
-    <vendor>DOCC</vendor>
+    <id>com.azsl.plugin</id>
+    <name>AZSL Language Support</name>
+    <vendor>DOCC, Cengiz Terzibas</vendor>
     <description><![CDATA[
-        Syntax highlighting and DXC validation for HLSL (High Level Shading Language) files.
-        Supports .hlsl and .hlsli file extensions by default.
-        Additional extensions (.fx, .fxh, .vsh, .psh, .gsh, .csh, etc.) can be added via Settings > Editor > File Types > HLSL.
+        <h3>AZSL (Amazon Shader Language / O3DE)</h3>
+        <p>Syntax highlighting, code completion, go-to-declaration, folding, brace matching, commenting and
+        <b>azslc</b> validation for O3DE shader files.</p>
+        <ul>
+            <li><b>File extensions:</b> .azsl, .azsli, .srgi</li>
+            <li><b>Shader Resource Groups (SRG):</b> ShaderResourceGroup, partial ShaderResourceGroup, ShaderResourceGroupSemantic</li>
+            <li><b>Shader Options:</b> option bool, option enum class with defaults</li>
+            <li><b>SRG Frequency Semantics:</b> SRG_PerDraw, SRG_PerObject, SRG_PerMaterial, SRG_PerSubPass, SRG_PerPass, SRG_PerPass_WithFallback, SRG_PerView, SRG_PerScene, SRG_Bindless, SRG_RayTracingGlobal, SRG_RayTracingScene, SRG_RayTracingMaterial</li>
+            <li><b>Sampler State Properties:</b> AddressU/V/W, MinFilter, MagFilter, MipFilter, ComparisonFunc, BorderColor, MaxAnisotropy, MipLODBias, MaxLOD, MinLOD</li>
+            <li><b>Sampler State Values:</b> Wrap, Clamp, Mirror, Border, MirrorOnce, Point, Linear, Anisotropic, comparison functions</li>
+            <li><b>azslc validation:</b> real-time errors/warnings via the official O3DE AZSL compiler (with cpp preprocessing and engine include-path resolution)</li>
+            <li><b>azslc tool window:</b> run --srg / --options / --ia / --bindingdep on the current file</li>
+            <li><b>Structure view:</b> SRGs, SRG semantics, structs, enums, functions and shader options</li>
+            <li><b>Hover documentation</b> for built-ins, types, SRG semantics and sampler states</li>
+            <li><b>Live templates:</b> srg, srgsem, option, sampler, struct, vs, ps, cs</li>
+            <li><b>New file templates:</b> AZSL File (.azsl), AZSL Include (.azsli) and Shader File (.shader) offered in the New context menu</li>
+            <li><b>Go to declaration</b> and completion across O3DE engine/project includes (auto-detected roots)</li>
+            <li><b>Intentions:</b> Add '#pragma once'</li>
+            <li><b>clang-format</b> integration with optional format-on-save</li>
+            <li><b>Color scheme:</b> Settings → Editor → Color Scheme → AZSL</li>
+        </ul>
+        <p><i>Additional extensions can be added via Settings → Editor → File Types.</i></p>
     ]]></description>
+
+    <change-notes><![CDATA[
+        <h2>v1.17.0 - New file menu entries</h2>
+        <ul>
+            <li><b>New file templates:</b> right-click → New now offers <code>AZSL File</code> (.azsl), <code>AZSL Include</code> (.azsli) and <code>Shader File</code> (.shader)</li>
+            <li>Templates are editable under Settings → Editor → File and Code Templates → Files</li>
+            <li><code>.azsli</code> files start with <code>#pragma once</code></li>
+        </ul>
+        <h2>v1.16.0 - AZSL only</h2>
+        <ul>
+            <li><b>AZSL-only plugin</b>: removed all HLSL language support and DXC validation</li>
+            <li>AZSL (Amazon Shader Language) support for O3DE shader development</li>
+            <li>File extensions: <code>.azsl</code>, <code>.azsli</code>, <code>.srgi</code></li>
+            <li>Dedicated icons and file types for <code>.azsl</code> and <code>.azsli</code></li>
+            <li><b>Shader Resource Groups (SRG)</b>, <b>Shader Options</b>, <b>SRG Frequency Semantics</b>, <b>Sampler States</b></li>
+            <li><b>azslc validation</b> (cpp preprocess + azslc --syntax/--semantic/--full) with include-path resolution</li>
+            <li>Separate <b>AZSL color scheme</b> (Settings → Editor → Color Scheme → AZSL)</li>
+            <li>Full IDE integration: completion, go-to-declaration, folding, brace matching, commenting, clang-format, azslc validation</li>
+            <li>Dropped <code>.shader</code>: CLion/Rider's C++ backend owns that extension (built-in Shader file type)</li>
+        </ul>
+    ]]></change-notes>
 
     <depends>com.intellij.modules.platform</depends>
 
     <extensions defaultExtensionNs="com.intellij">
         <fileType
-                name="HLSL File"
-                implementationClass="com.hlsl.HlslFileType"
+                name="AZSL File"
+                implementationClass="com.azsl.AzslFileType"
                 fieldName="INSTANCE"
-                language="HLSL"
-                extensions="hlsl;hlsli"/>
+                language="AZSL"
+                extensions="azsl;srgi"/>
+
+        <fileType
+                name="AZSL Include"
+                implementationClass="com.azsl.AzsliFileType"
+                fieldName="INSTANCE"
+                language="AZSL"
+                extensions="azsli"/>
 
         <lang.parserDefinition
-                language="HLSL"
-                implementationClass="com.hlsl.parser.HlslParserDefinition"/>
+                language="AZSL"
+                implementationClass="com.azsl.parser.AzslParserDefinition"/>
 
         <lang.syntaxHighlighterFactory
-                language="HLSL"
-                implementationClass="com.hlsl.highlighting.HlslSyntaxHighlighterFactory"/>
+                language="AZSL"
+                implementationClass="com.azsl.highlighting.AzslSyntaxHighlighterFactory"/>
 
         <colorSettingsPage
-                implementation="com.hlsl.highlighting.HlslColorSettingsPage"/>
+                implementation="com.azsl.highlighting.AzslColorSettingsPage"/>
 
         <lang.commenter
-                language="HLSL"
-                implementationClass="com.hlsl.HlslCommenter"/>
+                language="AZSL"
+                implementationClass="com.azsl.AzslCommenter"/>
 
         <lang.braceMatcher
-                language="HLSL"
-                implementationClass="com.hlsl.HlslBraceMatcher"/>
+                language="AZSL"
+                implementationClass="com.azsl.AzslBraceMatcher"/>
 
         <lang.foldingBuilder
-                language="HLSL"
-                implementationClass="com.hlsl.folding.HlslFoldingBuilder"/>
+                language="AZSL"
+                implementationClass="com.azsl.folding.AzslFoldingBuilder"/>
+
+        <lang.psiStructureViewFactory
+                language="AZSL"
+                implementationClass="com.azsl.structure.AzslStructureViewFactory"/>
+
+        <lang.documentationProvider
+                language="AZSL"
+                implementationClass="com.azsl.docs.AzslDocumentationProvider"/>
+
+        <defaultLiveTemplates file="liveTemplates/azsl.xml"/>
+
+        <liveTemplateContext
+                contextId="AZSL"
+                implementation="com.azsl.templates.AzslTemplateContextType"/>
 
         <completion.contributor
-                language="HLSL"
-                implementationClass="com.hlsl.completion.HlslCompletionContributor"/>
+                language="AZSL"
+                implementationClass="com.azsl.completion.AzslCompletionContributor"/>
 
         <psi.referenceContributor
-                language="HLSL"
-                implementation="com.hlsl.navigation.HlslReferenceContributor"/>
+                language="AZSL"
+                implementation="com.azsl.navigation.AzslReferenceContributor"/>
 
         <gotoDeclarationHandler
-                implementation="com.hlsl.navigation.HlslGotoDeclarationHandler"/>
+                implementation="com.azsl.navigation.AzslGotoDeclarationHandler"/>
 
         <annotator
-                language="HLSL"
-                implementationClass="com.hlsl.highlighting.HlslStructNameAnnotator"/>
+                language="AZSL"
+                implementationClass="com.azsl.highlighting.AzslStructNameAnnotator"/>
 
         <externalAnnotator
-                language="HLSL"
-                implementationClass="com.hlsl.validation.HlslDxcAnnotator"/>
+                language="AZSL"
+                implementationClass="com.azsl.validation.AzslcAnnotator"/>
 
         <applicationConfigurable
                 parentId="tools"
-                instance="com.hlsl.validation.HlslDxcConfigurable"
-                id="com.hlsl.validation.HlslDxcConfigurable"
-                displayName="HLSL / DXC"/>
+                instance="com.azsl.validation.AzslcConfigurable"
+                id="com.azsl.validation.AzslcConfigurable"
+                displayName="AZSL / azslc"/>
 
         <applicationService
-                serviceImplementation="com.hlsl.validation.HlslDxcSettings"/>
+                serviceImplementation="com.azsl.validation.AzslcSettings"/>
 
         <intentionAction>
-            <language>HLSL</language>
-            <className>com.hlsl.intentions.HlslAddDxcPragmasIntention</className>
-            <category>HLSL</category>
+            <language>AZSL</language>
+            <className>com.azsl.intentions.AzslAddPragmaOnceIntention</className>
+            <category>AZSL</category>
         </intentionAction>
 
+        <toolWindow
+                id="AZSL"
+                anchor="bottom"
+                factoryClass="com.azsl.toolwindow.AzslToolWindowFactory"/>
+
         <formattingService
-                implementation="com.hlsl.formatting.HlslClangFormatService"/>
+                implementation="com.azsl.formatting.AzslClangFormatService"/>
+
+        <fileDocumentManagerListener
+                implementation="com.azsl.formatting.AzslFormatOnSaveListener"/>
 
         <applicationService
-                serviceImplementation="com.hlsl.formatting.HlslClangFormatSettings"/>
+                serviceImplementation="com.azsl.formatting.AzslClangFormatSettings"/>
 
         <applicationConfigurable
                 parentId="tools"
-                instance="com.hlsl.formatting.HlslClangFormatConfigurable"
-                id="com.hlsl.formatting.HlslClangFormatConfigurable"
-                displayName="HLSL / clang-format"/>
+                instance="com.azsl.formatting.AzslClangFormatConfigurable"
+                id="com.azsl.formatting.AzslClangFormatConfigurable"
+                displayName="AZSL / clang-format"/>
 
         <notificationGroup
-                id="HLSL clang-format"
+                id="AZSL clang-format"
                 displayType="BALLOON"/>
     </extensions>
 </idea-plugin>

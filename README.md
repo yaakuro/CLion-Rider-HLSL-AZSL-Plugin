@@ -1,81 +1,299 @@
-# HLSL Language Support for CLion/Rider
-plugin providing syntax highlighting and DXC validation for HLSL (High Level Shading Language) files.
+# AZSL Language Support for CLion/Rider
+
+Plugin providing syntax highlighting and **azslc** validation for **AZSL** (Amazon Shader Language) — the shader language used by [O3DE](https://o3de.org/) (Open 3D Engine).
 
 ![Example](example.png)
 
+## What's New (v1.17.0)
+
+### New file templates
+
+Right-click in the project tree (or editor) → **New** now offers the three O3DE shader file kinds:
+
+| Menu entry | Creates |
+|------------|---------|
+| **AZSL File** | `*.azsl` |
+| **AZSL Include** | `*.azsli` (starts with `#pragma once`) |
+| **Shader File** | `*.shader` |
+
+They are standard file templates: edit them under **Settings → Editor → File and Code Templates → Files**.
+
+## What's New (v1.16.0)
+
+### O3DE tooling, navigation & structure
+
+- **azslc tool window** — run `azslc --srg` / `--options` / `--ia` / `--bindingdep` on the current file and inspect SRG layout, shader options, entry points and bindings
+- **O3DE include resolution** — go-to-declaration and completion now resolve engine/project `<Atom/...>` / ShaderLib includes
+- **Auto-detected O3DE roots** — engine (`project.json`, `Gems/Atom`) and project (`ShaderLib/viewsrg.srgi`) roots are discovered automatically (settings still override)
+- **Structure view** — outline of ShaderResourceGroups, SRG semantics, structs, enums, functions and shader options
+- **Hover documentation** — quick docs for built-ins, types, SRG semantics, sampler states and AZSL keywords
+- **Live templates** — `srg`, `srgsem`, `option`, `sampler`, `struct`, `vs`, `ps`, `cs`
+- **Intentions** — "Add `#pragma once`"
+- **Format on save** — optional clang-format on save (Settings → Tools → AZSL / clang-format)
+- **Distinct colors** for SRG frequency semantics, sampler state keywords and the `option` keyword
+
+### AZSL-only
+
+This release focuses exclusively on AZSL/O3DE:
+
+- **File extensions**: `.azsl`, `.azsli`, `.srgi`
+- **Dedicated file types & icons** for `.azsl` and `.azsli`
+- **azslc validation** — real-time errors/warnings from O3DE's official AZSL compiler
+- **Separate AZSL color scheme** — Settings → Editor → Color Scheme → **AZSL**
+
 ## Features
 
-- **Syntax highlighting** for keywords, types, built-in functions, semantics, preprocessor directives, numbers, strings, operators, and comments
-- **Struct/class name highlighting** — struct, cbuffer, tbuffer, class, interface, enum names and typedef aliases are highlighted at declaration and every usage site, including names declared in transitively `#include`d files
-- **Go to declaration** (`Ctrl+Click` / `Ctrl+B`) — jump to function, variable, and type declarations in the current file or any included file
-- **Code completion** — keywords, types, built-in functions (with auto-inserted parentheses), semantics (suggested after `:`), local identifiers, and symbols pulled from included files (functions, struct-like names, `#define` macros, and top-level `const` globals)
-- **Code folding** — collapse any multi-line `{ ... }` block (functions, structs, cbuffers, control-flow blocks) and block comments, each region independent
-- **clang-format integration** — Reformat Code routes HLSL files through a user-configured `clang-format` binary that picks up your `.clang-format` file (walks up from the file's directory)
-- **DXC compiler validation** — real-time error and warning annotations powered by the DirectX Shader Compiler
-- **"Add DXC pragmas" intention** — inserts `#pragma hlsl profile` / `entry` / `hv` skeleton at the top of the file
+- **Syntax highlighting** — keywords, types (including `float2`/`float3`/`float4`, matrices, textures, buffers), AZSL extensions (SRGs, options, samplers), semantics, preprocessor directives, numbers, strings, operators, and comments
+- **AZSL extensions**
+  - **Shader Resource Groups (SRG)** — `ShaderResourceGroup`, `partial ShaderResourceGroup`, `ShaderResourceGroupSemantic`
+  - **Shader Options** — `option bool`, `option enum class` with defaults
+  - **SRG Frequency Semantics** — `SRG_PerDraw`, `SRG_PerObject`, `SRG_PerMaterial`, `SRG_PerSubPass`, `SRG_PerPass`, `SRG_PerPass_WithFallback`, `SRG_PerView`, `SRG_PerScene`, `SRG_Bindless`, `SRG_RayTracingGlobal`, `SRG_RayTracingScene`, `SRG_RayTracingMaterial`
+  - **Sampler State Properties** — `AddressU/V/W`, `MinFilter`, `MagFilter`, `MipFilter`, `ComparisonFunc`, `BorderColor`, `MaxAnisotropy`, `MipLODBias`, `MaxLOD`, `MinLOD`
+  - **Sampler State Values** — `Wrap`, `Clamp`, `Mirror`, `Border`, `MirrorOnce`, `Point`, `Linear`, `Anisotropic`, comparison functions
+- **azslc tool window** — SRG layout / shader options / entry points / bindings (see below)
+- **Structure view** — SRGs, SRG semantics, structs, enums, functions and shader options
+- **Hover documentation** for built-ins, types, SRG semantics and sampler states
+- **Live templates** — `srg`, `srgsem`, `option`, `sampler`, `struct`, `vs`, `ps`, `cs`
+- **New file templates** — right-click → New offers `AZSL File` (.azsl), `AZSL Include` (.azsli) and `Shader File` (.shader)
+- **Struct/class name highlighting** — struct, class, interface, enum, SRG names are highlighted at declaration and every usage site, including names declared in transitively `#include`d files
+- **Go to declaration** (`Ctrl+Click` / `Ctrl+B`) — resolve across local and O3DE engine/project includes
+- **Code completion** — keywords, types, built-in functions, semantics (suggested after `:`), local identifiers, and symbols pulled from included files
+- **Code folding** — collapse multi-line `{ ... }` blocks and comments
+- **clang-format integration** — Reformat Code routes AZSL files through a user-configured `clang-format` binary; optional format-on-save
 - **Line and block commenting** (`Ctrl+/`, `Ctrl+Shift+/`)
 - **Brace matching** for `()`, `{}`, `[]`
-- **Color settings page** — customize all highlight colors under Settings → Editor → Color Scheme → HLSL
+- **Intentions** — "Add `#pragma once`"
+- **Color settings page** — customize highlight colors under Settings → Editor → Color Scheme → **AZSL**
 
 ## Supported File Extensions
 
-`hlsl`, `hlsli`, `fx`, `fxh`
+| File type | Extensions |
+|-----------|------------|
+| AZSL File | `azsl`, `srgi` |
+| AZSL Include | `azsli` |
 
-Additional extensions can be added via Settings → Editor → File Types → HLSL.
+Additional extensions can be added via Settings → Editor → File Types → AZSL.
 
-## DXC Validation
+> **Note on `.shader`:** O3DE `.shader` files (JSON pass assets) are intentionally **not** registered by this plugin. CLion/Rider ship a built-in **"Shader" file type** (a globe icon, from the C++/Rider backend) that claims the `shader` extension, and the platform does not let a plugin override a bundled/existing type for the same extension. If you'd prefer JSON highlighting for `.shader` files, map them to the built-in **JSON** type in **Settings → Editor → File Types**.
+>
+> The **Shader File** entry under **New** relies on that built-in type: the platform hides a file template when its extension maps to no known file type, so the entry appears in CLion/Rider but not in IDEs that don't know `shader`.
 
-The plugin can run the DirectX Shader Compiler (dxc) in the background to show compilation errors and warnings inline.
+## O3DE Tooling
+
+### azslc Tool Window
+
+**View → Tool Windows → AZSL** opens a panel that runs azslc on the file currently selected in the editor (uses the same azslc/cpp paths and include roots as validation):
+
+| Button | Command | Shows |
+|--------|---------|-------|
+| **Validate** | `azslc --semantic` | full semantic errors/warnings |
+| **SRG layout** | `azslc --srg` | constant buffers, textures, samplers |
+| **Options** | `azslc --options` | all `option` declarations |
+| **Entry points** | `azslc --ia` | entry functions and `numthreads` |
+| **Bindings** | `azslc --bindingdep` | which entry points access which SRG resources |
+
+Output is shown as plain text (no line mapping), mirroring the standalone CLI workflow from the O3DE docs.
+
+### Structure View
+
+The **Structure** tool window (or `Ctrl+F12`) outlines the current AZSL file:
+
+- `ShaderResourceGroup` / `ShaderResourceGroupSemantic` (with their `struct`s, functions and `option`s as children)
+- `struct` / `class` / `interface` / `enum` / `cbuffer` / `tbuffer`
+- functions (definitions)
+- shader `option`s
+
+Double-clicking an entry navigates to the declaration.
+
+### Hover Documentation
+
+Hover a built-in function, type, SRG frequency semantic, sampler state property/value, or an AZSL keyword (`option`, `partial`, interpolation modifiers, …) to see a short description.
+
+### Live Templates
+
+Type the abbreviation and press **Tab** in an `.azsl`/`.azsli` file:
+
+| Abbreviation | Expands to |
+|--------------|------------|
+| `srg` | `ShaderResourceGroup … : SRG_PerMaterial { … };` |
+| `srgsem` | `ShaderResourceGroupSemantic … { FrequencyId = …; };` |
+| `option` | `option bool … = …;` |
+| `sampler` | `Sampler … { AddressU/V = …; MinFilter/MagFilter/MipFilter = Linear; };` |
+| `struct` | `struct … { … };` |
+| `vs` | vertex-shader entry point |
+| `ps` | pixel-shader entry point |
+| `cs` | compute-shader entry point (`[numthreads(...)]`) |
+
+### Intentions
+
+- **Add `#pragma once`** — inserts an include guard at the top of an `.azsl`/`.azsli` file (available when not already present). AZSL is preprocessed with a C-style preprocessor, and O3DE's own `.azsli` files use `#pragma once`; it does not interfere with azslc validation.
+
+### Include Resolution & Auto-detection
+
+Go-to-declaration (`Ctrl+Click`) and completion resolve `#include` targets against the file's directory **and** the O3DE include roots:
+
+- `<engine>/Gems`, `<engine>/Gems/Atom/Feature/Common/Assets/ShaderLib`, `<engine>/Gems/Atom/RPI/Assets/ShaderLib`
+- `<project>/ShaderLib`
+
+Engine and project roots are auto-detected when not set in **Settings → Tools → AZSL / azslc**:
+
+- **Engine root** — nearest ancestor of a content root containing `Gems/Atom`
+- **Project root** — a directory containing `project.json`, or containing `ShaderLib/viewsrg.srgi`
+
+## azslc Validation (O3DE)
+
+The plugin runs the **AZSL Compiler (azslc)** — O3DE's official shader compiler — to validate AZSL shaders with full engine include-path resolution. This mirrors the `ShaderAssetBuilder` pipeline: preprocess with `cpp` → validate with `azslc`.
+
+### Prerequisites
+
+- **O3DE Engine** — installed (provides `azslc` and ShaderLib includes)
+- **C Preprocessor (cpp)** — Linux/macOS: `build-essential` / Xcode Command Line Tools; Windows: **MSYS2/MinGW** (`pacman -S mingw-w64-x86_64-cpp`)
 
 ### Setup
 
-1. Go to **Settings → Tools → HLSL / DXC**
-2. The plugin auto-detects `dxc.exe` from your PATH, Windows SDK, or Vulkan SDK
-3. Optionally set the path manually, default shader profile (default: `ps_6_6`), entry point (default: `main`), and HLSL version (default: `2021`)
+1. Go to **Settings → Tools → AZSL / azslc**
+2. **azslc executable** — auto-detected from `~/.o3de/3rdParty/packages/azslc-*/azslc/bin/Release/azslc`; or set manually
+3. **O3DE Engine root** — required (e.g., `/home/user/o3de` or `C:\o3de`). Used to resolve:
+   - `Gems` (repo root — for `<Atom/Feature/.../ShaderResourceGroups/...>` includes)
+   - `Gems/Atom/Feature/Common/Assets/ShaderLib`
+   - `Gems/Atom/RPI/Assets/ShaderLib`
+   - `Gems/Atom/Feature/Common/Assets/ShaderResourceGroups`
+4. **O3DE Project root** (optional) — the project the shader is built in (e.g. `.../VolumetricClouds/DemoProject`). Provides `ShaderLib/scenesrg.srgi` and `ShaderLib/viewsrg.srgi`, plus gem-local includes
+5. **Additional include paths** — add/remove/reorder custom directories
+6. **Validation mode** — `SYNTAX` (fast, `--syntax`), `SEMANTIC` (full, `--semantic`, default), `FULL` (`--full`)
+7. **Validate on file save only** — toggle to run only on save instead of on every keystroke
 
-### Per-file Overrides
+### How It Works
 
-Use pragma comments at the top of your shader files:
+When editing an `.azsl` / `.azsli` / `.srgi` file:
 
-```hlsl
-// #pragma hlsl profile vs_6_6
-// #pragma hlsl entry VSMain
+1. **Preprocess** — `cpp -nostdinc -undef -w -x c -I<engine Gems> -I<engine ShaderLib> -I<project ShaderLib> -I<gem> file.azsl`
+2. **Map line numbers** — `#line` markers are used to map diagnostics back to the original file, then stripped (azslc does not understand them)
+3. **Validate** — `azslc --syntax|--semantic|--full <preprocessed>`
+4. **Annotate** — errors/warnings appear inline with correct line/column
+
+This matches the O3DE `ShaderAssetBuilder` pipeline, so you see the same errors the build would produce.
+
+### Auto-detection
+
+| Tool | Location |
+|------|----------|
+| `azslc` | `~/.o3de/3rdParty/packages/azslc-*/azslc/bin/Release/azslc` or PATH |
+| `cpp` | PATH (Linux/macOS), MSYS2/MinGW on Windows |
+
+### Windows Notes
+
+azslc requires the C preprocessor (`cpp`). Install MSYS2:
+```powershell
+# In MSYS2 terminal:
+pacman -S mingw-w64-x86_64-cpp
 ```
+Ensure MSYS2 `usr/bin` is in your PATH, or set `cpp` path manually in settings.
 
 ## clang-format
 
-Because HLSL isn't a language clang-format recognizes by extension, the built-in JetBrains ClangFormat integration does not engage on `.hlsl` files. This plugin adds its own integration that transparently routes the Reformat Code action through clang-format.
+Because AZSL isn't a language clang-format recognizes by extension, the built-in JetBrains ClangFormat integration does not engage on `.azsl`/`.azsli` files. This plugin adds its own integration that transparently routes the Reformat Code action through clang-format.
 
 ### Setup
 
-1. Go to **Settings → Tools → HLSL / clang-format**
+1. Go to **Settings → Tools → AZSL / clang-format**
 2. The plugin auto-detects `clang-format` from your PATH. Optionally set the path manually
 3. Set a fallback style (LLVM, Google, Chromium, Mozilla, WebKit, Microsoft) for files not covered by a `.clang-format`
-4. Use Reformat Code (`Ctrl+Alt+L`, or whatever you've mapped it to — e.g. `Alt+Shift+F`) on an `.hlsl` file
+4. Use Reformat Code (`Ctrl+Alt+L`, or whatever you've mapped it to — e.g. `Alt+Shift+F`) on an `.azsl`/`.azsli` file
+5. Optionally enable **Format with clang-format on save** in the same page to format automatically when a file is saved
 
 Your `.clang-format` is discovered automatically by walking up from the file's directory. Range formatting (reformat selection) is supported.
 
-## Building
+## Building from Source
 
-Requires JDK 21.
+### Prerequisites
 
+- **JDK 17** (required — the plugin targets Java 17)
+- **Gradle 8.10+** (or use the included Gradle wrapper)
+
+### Linux
+
+```bash
+# Install JDK 17 (Ubuntu/Debian)
+sudo apt-get update && sudo apt-get install -y openjdk-17-jdk-headless
+
+# Or download Eclipse Temurin JDK 17 manually:
+# https://adoptium.net/temurin/releases/?version=17
+
+# Clone and build
+git clone https://github.com/your-repo/AZSL-Plugin.git
+cd AZSL-Plugin
+
+# Make wrapper executable (if needed)
+chmod +x gradlew
+
+# Build the plugin
+./gradlew build
+
+# The plugin ZIP will be in:
+# build/distributions/AZSLPlugin-<version>.zip
 ```
-.\gradlew.bat buildPlugin
+
+**Note:** If you have JDK 21+ as default, you must point Gradle to JDK 17. Create/edit `gradle.properties`:
+```properties
+org.gradle.java.home=/usr/lib/jvm/java-17-openjdk-amd64
+org.gradle.jvmargs=-Xmx2g
 ```
 
-The plugin zip will be in `build/distributions/`.
+### Windows
+
+```powershell
+# Install JDK 17:
+# - Eclipse Temurin: https://adoptium.net/temurin/releases/?version=17
+# - Microsoft Build of OpenJDK: https://learn.microsoft.com/en-us/java/openjdk/download
+# - Or via winget: winget install EclipseAdoptium.Temurin.17.JDK
+
+# For azslc validation: install MSYS2/MinGW (provides cpp preprocessor)
+# https://www.msys2.org/
+# Then in MSYS2 terminal:
+# pacman -S mingw-w64-x86_64-cpp
+
+# Clone and build
+git clone https://github.com/your-repo/AZSL-Plugin.git
+cd AZSL-Plugin
+
+# Build the plugin (uses included Gradle wrapper)
+.\gradlew.bat build
+
+# The plugin ZIP will be in:
+# build\distributions\AZSLPlugin-<version>.zip
+```
+
+**Note:** If `gradlew.bat` fails with "Unsupported class file major version", ensure `gradle.properties` points to JDK 17:
+```properties
+org.gradle.java.home=C:\Program Files\Eclipse Adoptium\jdk-17.0.x.x-hotspot
+org.gradle.jvmargs=-Xmx2g
+```
+
+### Verifying the Build
+
+```bash
+# Run the plugin in a sandbox IDE (IntelliJ Community) for testing
+./gradlew runIde
+```
 
 ## Installation
 
 1. Download the latest `.zip` from the [Releases](../../releases) page, or build it yourself (see above)
-2. In CLion/IntelliJ, go to **Settings → Plugins → ⚙ → Install Plugin from Disk...**
+2. In CLion/IntelliJ/Rider, go to **Settings → Plugins → ⚙ → Install Plugin from Disk...**
 3. Select the `.zip` file
 4. Restart the IDE
 
 ## Compatibility
 
-- IntelliJ Platform 2024.1 – 2026.1
+- **IntelliJ Platform:** 2024.1 – 2026.1
+- **IDE Support:** CLion, IntelliJ IDEA (Community/Ultimate), Rider, PyCharm, WebStorm, etc.
 - Works alongside the C/C++ plugin without conflicts
+
+## Credits
+
+- **DOCC** — original HLSL Language Support plugin that this project is derived from (lexer, parser, syntax highlighter, completion, go-to-declaration, folding, brace matching, clang-format integration)
+- **Cengiz Terzibas** — AZSL/O3DE support and modifications
 
 ## License
 
