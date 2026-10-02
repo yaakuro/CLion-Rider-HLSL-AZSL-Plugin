@@ -7,7 +7,7 @@
         <p>Syntax highlighting, code completion, go-to-declaration, folding, brace matching, commenting and
         <b>azslc</b> validation for O3DE shader files.</p>
         <ul>
-            <li><b>File extensions:</b> .azsl, .azsli, .srgi</li>
+            <li><b>File extensions:</b> .azsl, .azsli, .srgi (plus schema-driven code completion for O3DE .shader JSON files)</li>
             <li><b>Shader Resource Groups (SRG):</b> ShaderResourceGroup, partial ShaderResourceGroup, ShaderResourceGroupSemantic</li>
             <li><b>Shader Options:</b> option bool, option enum class with defaults</li>
             <li><b>SRG Frequency Semantics:</b> SRG_PerDraw, SRG_PerObject, SRG_PerMaterial, SRG_PerSubPass, SRG_PerPass, SRG_PerPass_WithFallback, SRG_PerView, SRG_PerScene, SRG_Bindless, SRG_RayTracingGlobal, SRG_RayTracingScene, SRG_RayTracingMaterial</li>
@@ -19,6 +19,7 @@
             <li><b>Hover documentation</b> for built-ins, types, SRG semantics and sampler states</li>
             <li><b>Live templates:</b> srg, srgsem, option, sampler, struct, vs, ps, cs</li>
             <li><b>New file templates:</b> AZSL File (.azsl), AZSL Include (.azsli) and Shader File (.shader) offered in the New context menu</li>
+            <li><b>.shader completion:</b> O3DE render pipeline states (DepthStencilState, RasterState, BlendState), enum values (CompareFunc, CullMode, BlendFactor, …), entry points, build arguments and <code>Source</code> .azsl paths</li>
             <li><b>Go to declaration</b> and completion across O3DE engine/project includes (auto-detected roots)</li>
             <li><b>Intentions:</b> Add '#pragma once'</li>
             <li><b>clang-format</b> integration with optional format-on-save</li>
@@ -28,6 +29,15 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h2>v1.18.0 - .shader completion</h2>
+        <ul>
+            <li><b>Render pipeline states:</b> completion for <code>DepthStencilState</code> (depth/stencil, compare funcs, stencil ops), <code>RasterState</code> (cull/fill modes, depth bias), <code>BlendState</code> / <code>GlobalTargetBlendState</code> (blend factors and ops)</li>
+            <li><b>Values:</b> enum strings (e.g. <code>GreaterEqual</code>, <code>Back</code>, <code>AlphaSource</code>), <code>true</code>/<code>false</code>, entry point stages, RHI backends</li>
+            <li><b>Whole schema:</b> top-level keys, <code>ProgramSettings</code> entry points, <code>Supervariants</code>, build arguments (<code>azslc</code>, <code>dxc</code>, …), <code>Definitions</code>, <code>DisabledRHIBackends</code></li>
+            <li><b>Source paths:</b> <code>"Source"</code> completes relative <code>.azsl</code> file paths from the project</li>
+            <li><b>Auto-popup:</b> completion triggers on structure characters ({, :, ,, quote), not just while typing</li>
+            <li>The <b>Shader File</b> template now creates a valid <code>.shader</code> JSON skeleton</li>
+        </ul>
         <h2>v1.17.0 - New file menu entries</h2>
         <ul>
             <li><b>New file templates:</b> right-click → New now offers <code>AZSL File</code> (.azsl), <code>AZSL Include</code> (.azsli) and <code>Shader File</code> (.shader)</li>
@@ -105,6 +115,13 @@
         <completion.contributor
                 language="AZSL"
                 implementationClass="com.azsl.completion.AzslCompletionContributor"/>
+
+        <completion.contributor
+                language="any"
+                implementationClass="com.azsl.completion.shader.ShaderCompletionContributor"/>
+
+        <typedHandler
+                implementation="com.azsl.completion.shader.ShaderTypedHandler"/>
 
         <psi.referenceContributor
                 language="AZSL"

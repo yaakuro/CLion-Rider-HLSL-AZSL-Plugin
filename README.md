@@ -1,8 +1,37 @@
 # AZSL Language Support for CLion/Rider
 
-Plugin providing syntax highlighting and **azslc** validation for **AZSL** (Amazon Shader Language) — the shader language used by [O3DE](https://o3de.org/) (Open 3D Engine).
+Plugin providing syntax highlighting and **azslc** validation for **AZSL** (Amazon Shader Language) — the shader language used by [O3DE](https://o3de.org/) (Open 3D Engine) — plus schema-driven code completion for O3DE's JSON `.shader` files.
 
 ![Example](example.png)
+
+## What's New (v1.18.0)
+
+### `.shader` completion
+
+O3DE `.shader` files (the JSON side-car that configures how an `.azsl` gets compiled) now get
+code completion, driven by the engine's own `ShaderSourceData` / `AZ::RHI` render pipeline states:
+
+- **Render pipeline states** — `DepthStencilState` (`depth`/`stencil`, `enable`, `writeMask`,
+  `compareFunc`, `failOp`/`passOp`/`depthFailOp`, `frontFace`/`backFace`), `RasterState`
+  (`cullMode`, `fillMode`, depth bias, clip/conservative raster), `BlendState`,
+  `GlobalTargetBlendState`, `TargetBlendStates`
+- **Enum values** — `Never/Less/Equal/LessEqual/Greater/NotEqual/GreaterEqual/Always`,
+  `Zero/All`, `Keep/Replace/IncrementSaturate/…`, `None/Front/Back`, `Solid/Wireframe`,
+  `Add/Subtract/…`, `ColorSource/AlphaSource/…` — plus `true`/`false` and entry point stages
+- **Whole schema** — all 15 top-level keys (`Source`, `DrawList`, `ProgramSettings`,
+  `Supervariants`, `AddBuildArguments`/`RemoveBuildArguments` (`azslc`, `dxc`, `preprocessor`, …),
+  `Definitions`, `DisabledRHIBackends`, `KeepTempFolder`, …)
+- **`"Source"` paths** — completes relative `.azsl` paths from the project
+- **Auto-popup** on structure characters (`{`, `:`, `,`, `"`) as well as while typing
+- Works without a running engine — it's all static schema data transcribed from the engine sources
+
+The engine matches member names case-insensitively, so `"Depth"` and `"depth"` are both valid;
+completion suggests the canonical serialize-context spelling.
+
+### Fixed
+
+- The **Shader File** template now creates a valid `.shader` JSON skeleton (it previously emitted
+  a `//` comment, which the Asset Processor rejects)
 
 ## What's New (v1.17.0)
 
@@ -58,6 +87,7 @@ This release focuses exclusively on AZSL/O3DE:
 - **Struct/class name highlighting** — struct, class, interface, enum, SRG names are highlighted at declaration and every usage site, including names declared in transitively `#include`d files
 - **Go to declaration** (`Ctrl+Click` / `Ctrl+B`) — resolve across local and O3DE engine/project includes
 - **Code completion** — keywords, types, built-in functions, semantics (suggested after `:`), local identifiers, and symbols pulled from included files
+- **`.shader` completion** — O3DE render pipeline states (`DepthStencilState`, `RasterState`, `BlendState`), their enum values, entry points, build arguments and `Source` `.azsl` paths
 - **Code folding** — collapse multi-line `{ ... }` blocks and comments
 - **clang-format integration** — Reformat Code routes AZSL files through a user-configured `clang-format` binary; optional format-on-save
 - **Line and block commenting** (`Ctrl+/`, `Ctrl+Shift+/`)
@@ -77,6 +107,8 @@ Additional extensions can be added via Settings → Editor → File Types → AZ
 > **Note on `.shader`:** O3DE `.shader` files (JSON pass assets) are intentionally **not** registered by this plugin. CLion/Rider ship a built-in **"Shader" file type** (a globe icon, from the C++/Rider backend) that claims the `shader` extension, and the platform does not let a plugin override a bundled/existing type for the same extension. If you'd prefer JSON highlighting for `.shader` files, map them to the built-in **JSON** type in **Settings → Editor → File Types**.
 >
 > The **Shader File** entry under **New** relies on that built-in type: the platform hides a file template when its extension maps to no known file type, so the entry appears in CLion/Rider but not in IDEs that don't know `shader`.
+>
+> **Code completion** does work in `.shader` files regardless of which type owns them: render pipeline states, enum values, entry points, build arguments and `Source` paths are completed from the static O3DE schema.
 
 ## O3DE Tooling
 
@@ -139,6 +171,34 @@ Engine and project roots are auto-detected when not set in **Settings → Tools 
 
 - **Engine root** — nearest ancestor of a content root containing `Gems/Atom`
 - **Project root** — a directory containing `project.json`, or containing `ShaderLib/viewsrg.srgi`
+
+### .shader Completion
+
+O3DE `.shader` files (the JSON side-car that configures how an `.azsl` is compiled) get code
+completion everywhere — no engine, tool path or extra setting required. The schema is static data
+transcribed from the engine's own serializers:
+
+| Position in the file | Completion offers |
+|----------------------|-------------------|
+| Top level | all 15 keys: `Source`, `DrawList`, `DepthStencilState`, `RasterState`, `BlendState`, `GlobalTargetBlendState`, `TargetBlendStates`, `ProgramSettings`, `AddBuildArguments`, `RemoveBuildArguments`, `Definitions`, `ShaderOptions`, `DisabledRHIBackends`, `Supervariants`, `KeepTempFolder` |
+| `DepthStencilState` / `RasterState` / `BlendState` / `GlobalTargetBlendState` / `TargetBlendStates` / `StencilOpState` | their members (`depth`, `stencil`, `enable`, `writeMask`, `compareFunc`, `frontFace`/`backFace`, `cullMode`, `fillMode`, blend state, …) |
+| Any enum member | engine enum values — `GreaterEqual`, `Keep`, `IncrementSaturate`, `Front`, `Wireframe`, `SrcAlpha`, `Add`, stage names, … |
+| Any boolean | `true` / `false` (inserted **unquoted** — the engine's JSON reader rejects `"true"`) |
+| `"Source"` value | relative `.azsl` paths found in the project |
+| `"DisabledRHIBackends"` entries | `dx12`, `vulkan`, `metal` |
+
+Behaviour:
+
+- Pops up after `{`, `:`, `,`, `"` and while typing; inside quotes only enum/bool values are
+  offered, outside quotes only keys (deduped against keys already present in the object).
+- Keys are inserted as `"key" : `, enum strings as `"value"`, so a half-typed entry completes to
+  valid JSON.
+- The engine matches member names **case-insensitively** (keys are compared via lower-cased CRC),
+  so `"Depth"` and `"depth"` both load; completion suggests the canonical serialize-context
+  spelling. Map keys such as `"0"` in `TargetBlendStates` are left alone.
+- Works regardless of which file type owns `.shader` (CLion/Rider's built-in Shader type or the
+  JSON mapping suggested above) — the completion provider is text-based and makes no assumptions
+  about the file's PSI.
 
 ## azslc Validation (O3DE)
 
@@ -276,6 +336,39 @@ org.gradle.jvmargs=-Xmx2g
 # Run the plugin in a sandbox IDE (IntelliJ Community) for testing
 ./gradlew runIde
 ```
+
+### Maintaining the .shader Schema (Developers)
+
+The `.shader` completion lives in `src/main/java/com/azsl/completion/shader/`:
+
+| File | Role |
+|------|------|
+| `ShaderFileSchema.java` | static catalog: section keys, enum options, bool keys (no IntelliJ API — kept portable so it can be tested headlessly) |
+| `ShaderPathScanner.java` | pure-text scan of `text[0, caret)` → path / key-value position (no PSI assumptions, because CLion/Rider own the `.shader` file type) |
+| `ShaderCompletionContributor.java` | IntelliJ completion provider (registered `language="any"`), insert handlers |
+| `ShaderTypedHandler.java` | gates auto-popup to positions the scanner resolves to schema positions |
+
+The schema is transcribed from these engine sources (re-sync from them when the engine changes):
+
+- `Gems/Atom/RPI/Code/Source/RPI.Reflect/Shader/ShaderSourceData.cpp` — the 15 top-level keys
+- `Gems/Atom/RHI/Code/Source/RHI.Reflect/RenderStates.cpp` + `Include/Atom/RHI.Reflect/RenderStates.h`,
+  `SamplerState.h` — depth/stencil/raster/blend states and their enums
+- `Gems/Atom/RPI/Code/Include/RPI.Reflect/Shader/ShaderCommonTypes.h` — entry-point stage names
+- `Gems/Atom/Asset/Shader/.../ShaderBuildArguments` (`RenderModules/.../ShaderBuildArguments.*`) —
+  `AddBuildArguments`/`RemoveBuildArguments` keys; RHI backends `dx12`, `vulkan`, `metal`
+
+After touching `ShaderFileSchema` or `ShaderPathScanner`, run the headless sweep (JDK only — no
+Gradle, no network):
+
+```bash
+./tools/verify-shader-schema.sh <o3de-engine-root>
+```
+
+It compiles both IntelliJ-free classes plus `tools/shader-schema-check/Check.java` and walks **every
+caret offset of every `*.shader` file in the engine tree**, asserting that each key and enum/bool
+value the engine really uses is offered by the schema (currently 341 files / ~193k offsets / ~358k
+assertions). If `javac` is not on your PATH, point the script at a JDK via `JAVAC=...`/`JAVA=...`
+or `JBR=/path/to/jbr`. A non-zero exit means the schema fell behind the engine.
 
 ## Installation
 

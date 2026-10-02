@@ -1,1 +1,16 @@
-// ${FILE_NAME}
+{
+    "Source" : "${NAME}.azsl",
+
+    "DepthStencilState" : {
+        "Depth" : { "Enable" : true, "CompareFunc" : "LessEqual" }
+    },
+
+    "DrawList" : "${NAME}Pass",
+
+    "ProgramSettings" : {
+        "EntryPoints" : [
+            { "Name" : "MainVS", "Type" : "Vertex" },
+            { "Name" : "MainPS", "Type" : "Fragment" }
+        ]
+    }
+}
